@@ -17,8 +17,8 @@
 
     <ImageView
         android:id="@+id/iv_car_mode"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_2d_car"
@@ -27,8 +27,8 @@
 
     <ImageView
         android:id="@+id/iv_north_mode"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_2d"
@@ -37,8 +37,8 @@
 
     <ImageView
         android:id="@+id/iv_3d_mode"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_3d"
@@ -47,8 +47,8 @@
 
     <ImageView
         android:id="@+id/iv_zoom_in"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_zoom_in"
@@ -57,8 +57,8 @@
 
     <ImageView
         android:id="@+id/iv_zoom_out"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_zoom_out"
