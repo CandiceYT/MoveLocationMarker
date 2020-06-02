@@ -11,6 +11,7 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.LatLng;
 
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private double mLongitude;
     private float mBearing;
     private static final float BEARING = 45.0f;
+    private boolean isFirst = false;
 
 
     @Override
@@ -111,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private LatLng mLatLng;
 
 
     @Override
@@ -121,21 +122,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 is2DCar = true;
                 is3DCar = false;
                 is2DNorth = false;
-                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0, -mBearing);
+                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0,mBearing);
+                mAMap.moveCamera(CameraUpdateFactory.changeBearing(mBearing));
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
                 break;
             case R.id.iv_north_mode:
                 is2DCar = false;
                 is3DCar = false;
                 is2DNorth = true;
-                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0, mBearing);
+                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0);
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
                 break;
             case R.id.iv_3d_mode:
                 is2DCar = false;
                 is3DCar = true;
                 is2DNorth = false;
-                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 19, 60, -mBearing);
+                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 19, 60,mBearing);
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
                 break;
             case R.id.iv_zoom_in:
@@ -171,6 +173,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (mapView != null) {
             mapView.onPause();
         }
+        if (mLocationOverlay != null) {
+            mLocationOverlay.removeFromMap();
+        }
+        isFirst = false;
     }
 
     @Override
@@ -196,8 +202,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-//    int count;
-
 
     private class MyLocationListener implements AMapLocationListener {
 
@@ -211,16 +215,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (aMapLocation.getErrorCode() == AMapLocation.LOCATION_SUCCESS) {
                     mLatitude = aMapLocation.getLatitude();
                     mLongitude = aMapLocation.getLongitude();
-//                    LatLng latLng = mLatLngs.get(count);
-                    if (mLatLng == null) {
-                        //首次定位,选择移动到地图中心点并修改级别到15级
-//                        mLatLng = latLng;
-                        mLatLng = new LatLng(mLatitude, mLongitude);
-                        CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0, 0);
-                    }else {
-                        mLatLng = new LatLng(mLatitude, mLongitude);
+                    if (!isFirst) {
+                        isFirst = true;
+                        mLocationOverlay.addLocationIcon(mLatitude, mLongitude);
+                        CameraUtil.setCenterForMap(mAMap, mLatitude, mLongitude, 17);
                     }
-                    mLocationOverlay.locationChange(mLatLng, mBearing);
+                    mLocationOverlay.locationChange(new LatLng(mLatitude,mLongitude),mBearing);
                 }
             }
         }

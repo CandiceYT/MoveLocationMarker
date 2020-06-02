@@ -10,7 +10,6 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
@@ -46,92 +45,68 @@ public class LocationOverlay {
         this.mContext = context;
     }
 
-    private void addLocationIcon() {
+    public void addLocationIcon(double latitude, double longitude) {
         if (locMarker == null) {
-            addMarker();
+            addMarker(latitude, longitude);
         }
         if (locCircle == null) {
-            addCircle();
+            addCircle(latitude, longitude);
         }
     }
 
     /**
      * 添加定位marker
+     *
+     * @param latitude
+     * @param longitude
      */
-    private void addMarker() {
+    private void addMarker(double latitude, double longitude) {
         BitmapDescriptor des = BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_location);
-        locMarker = mAMap.addMarker(new MarkerOptions().position(point).icon(des).draggable(false)
-                .anchor(0.5f, 0.5f));
+        locMarker =
+                mAMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).icon(des).draggable(false)
+                        .anchor(0.5f, 0.5f));
     }
 
 
     /**
      * 添加定位精度圈
+     *
+     * @param latitude
+     * @param longitude
      */
-    private void addCircle() {
-        locCircle = mAMap.addCircle(new CircleOptions().center(point).radius(radius)
-                .fillColor(Color.parseColor("#17536D93"))
-                .strokeColor(Color.parseColor("#4D455874"))
-                .strokeWidth(2.0f));
+    private void addCircle(double latitude, double longitude) {
+        locCircle =
+                mAMap.addCircle(new CircleOptions().center(new LatLng(latitude, longitude)).radius(radius)
+                        .fillColor(Color.parseColor("#17536D93"))
+                        .strokeColor(Color.parseColor("#4D455874"))
+                        .strokeWidth(2.0f));
     }
 
 
     public void locationChange(LatLng latLng, float bearing) {
         mBearing = bearing;
         point = latLng;
-        addLocationIcon();
         if (mIs2DNorth) {
             locMarker.setRotateAngle(mBearing);
-        }else {
+        } else {
             mAMap.moveCamera(CameraUpdateFactory.changeBearing(mBearing));
         }
         moveMarker();
-        locCircle.setRadius(radius);
+//        locCircle.setRadius(radius);
     }
 
     private void moveMarker() {
         LatLng startPoint = locMarker.getPosition();
         LatLng endPoint = point;
-//        if (startPoint.latitude == endPoint.latitude && startPoint.longitude == endPoint.longitude) {
-//            mRotate = 0;
-//        } else {
-//        float rotate = getRotate(startPoint, endPoint);
-//        float angle = rotate + mAMap.getCameraPosition().bearing;
-//        float rotate = (float) getAngle(startPoint.latitude, startPoint.longitude,
-//                endPoint.latitude,
-//                endPoint.longitude);
-//            float angle = 360 - rotate + 90;
-//            Log.e(TAG, "angle is " + angle + ",rotate is " + rotate);
-            mRotate = (float) getAngle1(startPoint.latitude, startPoint.longitude,
-                    endPoint.latitude,
-                    endPoint.longitude);
-            Log.e(TAG, ",rotate is " + mRotate);
-//        }
-
-        CameraPosition cameraPosition = mAMap.getCameraPosition();
-        if (cameraPosition == null) {
-            return;
-        }
-        float zoom = cameraPosition.zoom;
-        float tilt = cameraPosition.tilt;
-        float bearing = cameraPosition.bearing;
-        Log.e(TAG, "current cameraPosition is " + cameraPosition.toString());
-        if (mIs2DCar || mIs3DCar) {
-            if (mIs2DCar) {
-                CameraUtil.moveMapCamera(mAMap, endPoint.latitude, endPoint.longitude, zoom, 0,
-                        -mRotate);
-            } else {
-                CameraUtil.moveMapCamera(mAMap, endPoint.latitude, endPoint.longitude, zoom, 60,
-                        -mRotate);
-            }
-        } else {
-            //获取 Marker覆盖物的图片旋转角度，从正北开始，逆时针计算。
+        mRotate = (float) getAngle1(startPoint.latitude, startPoint.longitude,
+                endPoint.latitude,
+                endPoint.longitude);
+        Log.e(TAG, ",rotate is " + mRotate);
+        if (mIs2DNorth) {
             locMarker.setRotateAngle(mRotate);
-            CameraUtil.moveMapCamera(mAMap, endPoint.latitude, endPoint.longitude, zoom, 0, 0);
         }
 //        将小蓝点提取到屏幕上
         ValueAnimator anim = ValueAnimator.ofObject(new PointEvaluator(), startPoint, endPoint);
-
         anim.addUpdateListener(valueAnimator -> {
             LatLng target = (LatLng) valueAnimator.getAnimatedValue();
             if (locCircle != null) {
@@ -141,7 +116,7 @@ public class LocationOverlay {
                 locMarker.setPosition(target);
             }
         });
-        anim.setDuration(1800);
+        anim.setDuration(2000);
         anim.start();
     }
 
@@ -156,9 +131,12 @@ public class LocationOverlay {
     public void removeFromMap() {
         if (locMarker != null) {
             locMarker.remove();
+            locMarker.destroy();
+            locMarker = null;
         }
         if (locCircle != null) {
             locCircle.remove();
+            locCircle = null;
         }
     }
 

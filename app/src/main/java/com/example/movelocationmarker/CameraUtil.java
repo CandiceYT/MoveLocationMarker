@@ -32,7 +32,21 @@ public class CameraUtil {
                 .build();
         Log.e(TAG, "cameraPosition is " + cameraPosition.toString());
         CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
-//        aMap.clear(isClear);
+        aMap.moveCamera(cameraUpdate);
+    }
+
+    public static void moveMapCamera(AMap aMap, double latitude, double longitude, float zoom,
+                                     float tilt) {
+        if (aMap == null || !isValid(latitude, longitude)) {
+            return;
+        }
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(latitude, longitude))
+                .zoom(zoom)
+                .tilt(tilt)
+                .build();
+        Log.e(TAG, "cameraPosition is " + cameraPosition.toString());
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
         aMap.moveCamera(cameraUpdate);
     }
 
@@ -58,5 +72,12 @@ public class CameraUtil {
         } else {
             return true;
         }
+    }
+
+    public static void setCenterForMap(AMap aMap, double latitude, double longitude, float zoom) {
+        if (aMap == null || !isValid(latitude, longitude)) {
+            return;
+        }
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), zoom));
     }
 }
