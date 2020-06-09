@@ -11,12 +11,8 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
-import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.LatLng;
-
-import java.io.File;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -33,12 +29,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AMapLocationClient mLocationClient;
     private AMapLocationClientOption mLocationOption;
     private LocationOverlay mLocationOverlay;
-    private List<LatLng> mLatLngs;
     private MyLocationListener mAMapLocationListener;
     private double mLatitude;
     private double mLongitude;
     private float mBearing;
-    private static final float BEARING = 45.0f;
+    private static final float BEARING = -45.0f;
     private boolean isFirst = false;
 
 
@@ -56,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mapView = findViewById(R.id.map_view);
         mapView.onCreate(savedInstanceState);
         initMap();
-        initPoints();
         setListener();
     }
 
@@ -66,17 +60,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         iv3dMode.setOnClickListener(this);
         ivZoomIn.setOnClickListener(this);
         ivZoomOut.setOnClickListener(this);
+        mAMap.setOnMapTouchListener(motionEvent -> {
+            useMoveToLocationWithMapMode = true;
+            setUserTouch(useMoveToLocationWithMapMode);
+        });
         mAMap.setOnMapClickListener(latLng -> {
             if (mLocationOverlay != null) {
-                mLocationOverlay.locationChange(latLng, mBearing);
+//                mLocationOverlay.locationChange(latLng, mBearing);
             }
         });
     }
 
-    private void initPoints() {
-        mLatLngs = TraceAsset.parseLocationsData(this.getAssets(),
-                "traceRecord" + File.separator + "356022065185856.csv");
+    private void setUserTouch(boolean useMoveToLocationWithMapMode) {
+        if (mLocationOverlay != null) {
+            mLocationOverlay.setUserMoveToLocationWithMode(useMoveToLocationWithMapMode);
+        }
     }
+
 
     private void initMap() {
         if (mAMap == null) {
@@ -113,8 +113,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -122,33 +120,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 is2DCar = true;
                 is3DCar = false;
                 is2DNorth = false;
-                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0,mBearing);
-                mAMap.moveCamera(CameraUpdateFactory.changeBearing(mBearing));
+                useMoveToLocationWithMapMode = true;
+                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0, mBearing);
+                useMoveToLocationWithMapMode = false;
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
+                mLocationOverlay.locationChange(new LatLng(mLatitude,mLongitude),mBearing);
                 break;
             case R.id.iv_north_mode:
                 is2DCar = false;
                 is3DCar = false;
                 is2DNorth = true;
+                useMoveToLocationWithMapMode = true;
                 CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 17, 0);
+                useMoveToLocationWithMapMode = false;
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
+                mLocationOverlay.locationChange(new LatLng(mLatitude,mLongitude),mBearing);
                 break;
             case R.id.iv_3d_mode:
                 is2DCar = false;
                 is3DCar = true;
                 is2DNorth = false;
-                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 19, 60,mBearing);
+                useMoveToLocationWithMapMode = true;
+                CameraUtil.moveMapCamera(mAMap, mLatitude, mLongitude, 19, 60, mBearing);
+                useMoveToLocationWithMapMode = false;
                 mLocationOverlay.set3D2D(is2DNorth, is3DCar, is2DCar);
+                mLocationOverlay.locationChange(new LatLng(mLatitude,mLongitude),mBearing);
                 break;
             case R.id.iv_zoom_in:
+                useMoveToLocationWithMapMode = true;
                 LocationUtil.zoomIn(mAMap);
+                useMoveToLocationWithMapMode = false;
                 break;
             case R.id.iv_zoom_out:
+                useMoveToLocationWithMapMode = true;
                 LocationUtil.zoomOut(mAMap);
+                useMoveToLocationWithMapMode = false;
                 break;
             default:
                 break;
         }
+        setUserTouch(useMoveToLocationWithMapMode);
     }
 
 
@@ -173,10 +184,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (mapView != null) {
             mapView.onPause();
         }
+        isFirst = false;
         if (mLocationOverlay != null) {
             mLocationOverlay.removeFromMap();
         }
-        isFirst = false;
     }
 
     @Override
@@ -202,6 +213,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //用户操作放大缩小 2d 3d 切换 当前位置按钮 touch 地图 打断地图的操作
+    private boolean useMoveToLocationWithMapMode = false;
 
     private class MyLocationListener implements AMapLocationListener {
 
@@ -220,9 +233,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mLocationOverlay.addLocationIcon(mLatitude, mLongitude);
                         CameraUtil.setCenterForMap(mAMap, mLatitude, mLongitude, 17);
                     }
-                    mLocationOverlay.locationChange(new LatLng(mLatitude,mLongitude),mBearing);
+//                    else {
+//                        if (useMoveToLocationWithMapMode) {
+//                            //二次以后定位，使用sdk中没有的模式，让地图和小蓝点一起移动到中心点（类似导航锁车时的效果）
+//                            mLocationOverlay.startMoveLocationAndMap(new LatLng(mLatitude,
+//                                    mLongitude));
+//                        } else {
+//                            mLocationOverlay.startChangeLocation(new LatLng(mLatitude,
+//                            mLongitude));
+//                        }
+//                    }
+                    mLocationOverlay.locationChange(new LatLng(mLatitude, mLongitude), mBearing);
                 }
             }
         }
     }
+
+
 }
